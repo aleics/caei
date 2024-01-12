@@ -51,6 +51,14 @@ impl Board {
     self.values[index(row, column)]
   }
 
+  /// Returns a copy of the board as a vector of rows
+  pub fn as_rows(&self) -> Vec<Vec<i32>> {
+    (0..LENGTH)
+      .step_by(COLUMNS)
+      .map(|i| self.values[i..i + ROWS].to_vec())
+      .collect()
+  }
+
   /// Sets a `value` in the board given a `row` and `column` position.
   fn set(&mut self, row: usize, column: usize, value: i32) {
     let index = index(row, column);
@@ -405,5 +413,19 @@ mod tests {
     let game = Board::with_values([8, 4, 2, 4, 2, 8, 4, 2, 8, 4, 2, 4, 2, 8, 4, 2]);
 
     assert_eq!(game.is_over(), true);
+  }
+
+  #[test]
+  fn as_rows() {
+    let game = Board::with_values([8, 4, 2, 4, 2, 8, 4, 2, 8, 4, 2, 4, 2, 8, 4, 4]);
+    assert_eq!(
+      game.as_rows(),
+      vec![
+        vec![8, 4, 2, 4],
+        vec![2, 8, 4, 2],
+        vec![8, 4, 2, 4],
+        vec![2, 8, 4, 4],
+      ]
+    );
   }
 }
