@@ -1,14 +1,14 @@
 use axum::extract::State;
+use axum::http::{self, HeaderValue, Method};
 use axum::response::IntoResponse;
-use axum::{
-  routing::{get, post},
-  Json, Router,
-};
+use axum::routing::{get, post};
+use axum::{Json, Router};
 use caei_core::{Board, Move};
 use serde::{Deserialize, Serialize};
 use std::ops::Deref;
 use std::sync::{Arc, RwLock};
 use tokio::net::TcpListener;
+use tower_http::cors::CorsLayer;
 
 #[derive(Clone)]
 struct SharedState {
@@ -29,7 +29,7 @@ impl SharedState {
 
   fn apply_move(&self, movement: MoveDTO) {
     let mut board = self.state.write().unwrap();
-    board.apply_move(Move::from(movement));
+    board.round(Move::from(movement));
   }
 }
 
@@ -87,6 +87,12 @@ fn routes(board: Board) -> Router {
   Router::new()
     .route("/board", get(get_board))
     .route("/board/move", post(move_board))
+    .layer(
+      CorsLayer::new()
+        .allow_origin("http://localhost:3000".parse::<HeaderValue>().unwrap())
+        .allow_methods([Method::GET, Method::POST])
+        .allow_headers([http::header::CONTENT_TYPE]),
+    )
     .with_state(SharedState::new(board))
 }
 
@@ -96,6 +102,6 @@ async fn main() {
 
   let app = routes(Board::new());
 
-  let listener = TcpListener::bind("0.0.0.0:3000").await.unwrap();
+  let listener = TcpListener::bind("localhost:8080").await.unwrap();
   axum::serve(listener, app).await.unwrap();
 }
