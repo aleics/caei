@@ -1,0 +1,11 @@
+.board {
+  max-width: 100%;
+  height: calc(100vh * (4 / 6));
+  padding: 10px;
+  background: #bbada0;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr 1fr 1fr;
+  gap: 10px;
+  border-radius: 5px;
+}

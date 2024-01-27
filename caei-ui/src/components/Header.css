@@ -1,0 +1,11 @@
+.header {
+  display: flex;
+  height: calc(100vh / 6);
+}
+
+.title {
+  padding: 5px;
+  font-size: 48px;
+  font-weight: bold;
+  color: #786f66
+}

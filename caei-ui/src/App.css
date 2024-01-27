@@ -1,0 +1,5 @@
+.game {
+  background: #f1f0e8;
+  padding: 0 calc(100% * 0.2);
+  height: calc(100vh - 20px);
+}
