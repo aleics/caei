@@ -5,31 +5,40 @@ use axum::routing::{get, post};
 use axum::{Json, Router};
 use caei_core::{Board, Move};
 use serde::{Deserialize, Serialize};
-use std::ops::Deref;
 use std::sync::{Arc, RwLock};
 use tokio::net::TcpListener;
 use tower_http::cors::CorsLayer;
 
+struct Game {
+  board: Board,
+  is_over: bool,
+}
+
 #[derive(Clone)]
 struct SharedState {
-  state: Arc<RwLock<Board>>,
+  state: Arc<RwLock<Game>>,
 }
 
 impl SharedState {
   fn new(board: Board) -> Self {
     SharedState {
-      state: Arc::new(RwLock::new(board)),
+      state: Arc::new(RwLock::new(Game {
+        board,
+        is_over: false,
+      })),
     }
   }
 
   fn read(&self) -> BoardDTO {
-    let board = self.state.read().unwrap();
-    BoardDTO::from(board.deref())
+    let game = self.state.read().unwrap();
+    BoardDTO::from(&game.board)
   }
 
   fn apply_move(&self, movement: MoveDTO) {
-    let mut board = self.state.write().unwrap();
-    board.round(Move::from(movement));
+    let mut game = self.state.write().unwrap();
+    if !game.is_over {
+      game.is_over = game.board.round(Move::from(movement));
+    }
   }
 }
 
