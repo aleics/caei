@@ -67,7 +67,12 @@ impl Board {
 
   /// Sets a `value` in the board to a random free slot.
   fn set_free_random(&mut self, value: i32) {
-    let index = rand::thread_rng().gen_range(0..self.free.len());
+    let max = self.free.len();
+    if max == 0 {
+      return;
+    }
+
+    let index = rand::thread_rng().gen_range(0..max);
 
     if let Some(free_index) = self.free.get_index(index) {
       self.set_index(*free_index, value);
