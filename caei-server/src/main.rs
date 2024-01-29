@@ -40,6 +40,12 @@ impl SharedState {
       game.is_over = game.board.round(Move::from(movement));
     }
   }
+
+  fn reset(&self) {
+    let mut game = self.state.write().unwrap();
+    game.board = Board::new();
+    game.is_over = false;
+  }
 }
 
 #[derive(Serialize)]
@@ -92,10 +98,16 @@ async fn move_board(
   Json(state.read())
 }
 
+async fn reset_board(State(state): State<SharedState>) -> impl IntoResponse {
+  state.reset();
+  Json(state.read())
+}
+
 fn routes(board: Board) -> Router {
   Router::new()
     .route("/board", get(get_board))
     .route("/board/move", post(move_board))
+    .route("/board/reset", post(reset_board))
     .layer(
       CorsLayer::new()
         .allow_origin("http://localhost:3000".parse::<HeaderValue>().unwrap())
