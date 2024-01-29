@@ -2,6 +2,7 @@
   max-width: 100%;
   height: calc(100vh * (4 / 6));
   padding: 10px;
+  margin: 10px 0;
   background: #bbada0;
   display: grid;
   grid-template-columns: 1fr 1fr 1fr 1fr;

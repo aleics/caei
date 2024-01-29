@@ -1,11 +1,38 @@
 .header {
   display: flex;
   height: calc(100vh / 6);
+  min-height: 150px;
+  flex-direction: column;
+  color: #786f66;
 }
 
 .title {
   padding: 5px;
   font-size: 48px;
   font-weight: bold;
-  color: #786f66
+}
+
+.subTitle {
+  display: flex;
+  justify-content: space-between;
+}
+
+.subTitle > span {
+  line-height: 32px;
+}
+
+.reset {
+  background: #8F7A66;
+  border: 0;
+  border-radius: 5px;
+  height: 65px;
+  color: white;
+  width: 175px;
+  font-size: 21px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.reset:hover {
+  background: #746352;
 }
