@@ -92,8 +92,10 @@ impl Board {
 
   /// Executes a round given a movement and updates the board. Returns `true` if the game is over.
   pub fn round(&mut self, movement: Move) -> bool {
-    self.apply_move(movement);
-    self.set_free_random(2);
+    let changed = self.apply_move(movement);
+    if changed {
+      self.set_free_random(2);
+    }
 
     self.is_over()
   }
@@ -125,7 +127,7 @@ impl Board {
   }
 
   /// Applies a given `movement` to the board.
-  pub fn apply_move(&mut self, movement: Move) {
+  pub fn apply_move(&mut self, movement: Move) -> bool {
     match movement {
       Move::Left => self.move_left(),
       Move::Right => self.move_right(),
@@ -135,7 +137,9 @@ impl Board {
   }
 
   /// Applies a left movement to the board.
-  fn move_left(&mut self) {
+  fn move_left(&mut self) -> bool {
+    let mut changed = false;
+
     for row in 0..ROWS {
       let mut i = 0;
       let mut j = i + 1;
@@ -144,20 +148,22 @@ impl Board {
         let current = self.get(row, i);
         let next = self.get(row, j);
 
+        // If the next value is 0, we ignore it
+        if next == 0 {
+          j += 1;
+        }
         // If the current value is 0, we interchange values
-        if current == 0 {
+        else if current == 0 {
           self.set(row, i, next);
           self.set(row, j, 0);
           j += 1;
-        }
-        // If the next value is 0, we ignore it
-        else if next == 0 {
-          j += 1;
+          changed = true;
         } else {
           // If values can be merged, we merge next into current
           if current == next {
             self.set(row, i, current * 2);
             self.set(row, j, 0);
+            changed = true;
           }
 
           // Start next round from the next current index
@@ -166,10 +172,14 @@ impl Board {
         }
       }
     }
+
+    changed
   }
 
   /// Applies a right movement to the board.
-  fn move_right(&mut self) {
+  fn move_right(&mut self) -> bool {
+    let mut changed = false;
+
     for row in 0..ROWS {
       let mut i: i32 = COLUMNS as i32 - 1;
       let mut j: i32 = i - 1;
@@ -178,20 +188,22 @@ impl Board {
         let current = self.get(row, i as usize);
         let next = self.get(row, j as usize);
 
+        // If the next value is 0, we ignore it
+        if next == 0 {
+          j -= 1;
+        }
         // If the current value is 0, we interchange values
-        if current == 0 {
+        else if current == 0 {
           self.set(row, i as usize, next);
           self.set(row, j as usize, 0);
           j -= 1;
-        }
-        // If the next value is 0, we ignore it
-        else if next == 0 {
-          j -= 1;
+          changed = true;
         } else {
           // If values can be merged, we merge next into current
           if current == next {
             self.set(row, i as usize, current * 2);
             self.set(row, j as usize, 0);
+            changed = true;
           }
 
           // Start next round from the next current index
@@ -200,10 +212,14 @@ impl Board {
         }
       }
     }
+
+    changed
   }
 
   /// Applies an up movement to the board.
-  fn move_up(&mut self) {
+  fn move_up(&mut self) -> bool {
+    let mut changed = false;
+
     for column in 0..COLUMNS {
       let mut i = 0;
       let mut j = i + 1;
@@ -212,20 +228,22 @@ impl Board {
         let current = self.get(i, column);
         let next = self.get(j, column);
 
+        // If the next value is 0, we ignore it
+        if next == 0 {
+          j += 1;
+        }
         // If the current value is 0, we interchange values
-        if current == 0 {
+        else if current == 0 {
           self.set(i, column, next);
           self.set(j, column, 0);
           j += 1;
-        }
-        // If the next value is 0, we ignore it
-        else if next == 0 {
-          j += 1;
+          changed = true;
         } else {
           // If values can be merged, we merge next into current
           if current == next {
             self.set(i, column, current * 2);
             self.set(j, column, 0);
+            changed = true;
           }
 
           // Start next round from the next current index
@@ -234,10 +252,14 @@ impl Board {
         }
       }
     }
+
+    changed
   }
 
   /// Applies a down movement to the board.
-  fn move_down(&mut self) {
+  fn move_down(&mut self) -> bool {
+    let mut changed = false;
+
     for column in 0..COLUMNS {
       let mut i: i32 = ROWS as i32 - 1;
       let mut j: i32 = i - 1;
@@ -246,20 +268,22 @@ impl Board {
         let current = self.get(i as usize, column);
         let next = self.get(j as usize, column);
 
+        // If the next value is 0, we ignore it
+        if next == 0 {
+          j -= 1;
+        }
         // If the current value is 0, we interchange values
-        if current == 0 {
+        else if current == 0 {
           self.set(i as usize, column, next);
           self.set(j as usize, column, 0);
           j -= 1;
-        }
-        // If the next value is 0, we ignore it
-        else if next == 0 {
-          j -= 1;
+          changed = true;
         } else {
           // If values can be merged, we merge next into current
           if current == next {
             self.set(i as usize, column, current * 2);
             self.set(j as usize, column, 0);
+            changed = true;
           }
 
           // Start next round from the next current index
@@ -268,6 +292,8 @@ impl Board {
         }
       }
     }
+
+    changed
   }
 }
 
@@ -309,156 +335,212 @@ mod tests {
   fn move_left() {
     let mut game = Board::with_values([0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 0, 2, 2, 2, 2, 0]);
 
-    game.apply_move(Move::Left);
+    let changed = game.apply_move(Move::Left);
 
     assert_eq!(
       game,
       Board::with_values([2, 0, 0, 0, 4, 0, 0, 0, 4, 2, 0, 0, 4, 2, 0, 0])
     );
+    assert!(changed);
 
     let mut game = Board::with_values([0, 0, 0, 0, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 2, 2]);
 
-    game.apply_move(Move::Left);
+    let changed = game.apply_move(Move::Left);
 
     assert_eq!(
       game,
       Board::with_values([0, 0, 0, 0, 4, 4, 0, 0, 2, 0, 0, 0, 4, 0, 0, 0])
     );
+    assert!(changed);
 
     let mut game = Board::with_values([0, 2, 4, 0, 8, 0, 2, 2, 2, 2, 0, 4, 2, 0, 0, 2]);
 
-    game.apply_move(Move::Left);
+    let changed = game.apply_move(Move::Left);
 
     assert_eq!(
       game,
       Board::with_values([2, 4, 0, 0, 8, 4, 0, 0, 4, 4, 0, 0, 4, 0, 0, 0])
     );
+    assert!(changed);
 
     let mut game = Board::with_values([2, 2, 2, 2, 4, 2, 2, 0, 2, 2, 0, 4, 2, 0, 2, 2]);
 
-    game.apply_move(Move::Left);
+    let changed = game.apply_move(Move::Left);
 
     assert_eq!(
       game,
       Board::with_values([4, 4, 0, 0, 4, 4, 0, 0, 4, 4, 0, 0, 4, 2, 0, 0])
     );
+    assert!(changed);
+
+    let mut game = Board::with_values([0, 0, 0, 0, 2, 0, 0, 0, 4, 2, 0, 0, 8, 4, 2, 0]);
+
+    let changed = game.apply_move(Move::Left);
+
+    assert_eq!(
+      game,
+      Board::with_values([0, 0, 0, 0, 2, 0, 0, 0, 4, 2, 0, 0, 8, 4, 2, 0])
+    );
+    assert!(!changed);
   }
 
   #[test]
   fn move_right() {
     let mut game = Board::with_values([2, 0, 0, 0, 2, 0, 2, 0, 2, 0, 2, 2, 0, 2, 2, 2]);
 
-    game.apply_move(Move::Right);
+    let changed = game.apply_move(Move::Right);
 
     assert_eq!(
       game,
       Board::with_values([0, 0, 0, 2, 0, 0, 0, 4, 0, 0, 2, 4, 0, 0, 2, 4])
     );
+    assert!(changed);
 
     let mut game = Board::with_values([0, 0, 0, 0, 2, 2, 2, 2, 0, 0, 0, 2, 2, 2, 0, 0]);
 
-    game.apply_move(Move::Right);
+    let changed = game.apply_move(Move::Right);
 
     assert_eq!(
       game,
       Board::with_values([0, 0, 0, 0, 0, 0, 4, 4, 0, 0, 0, 2, 0, 0, 0, 4])
     );
+    assert!(changed);
 
     let mut game = Board::with_values([0, 4, 2, 0, 2, 2, 0, 8, 4, 0, 2, 2, 2, 0, 0, 2]);
 
-    game.apply_move(Move::Right);
+    let changed = game.apply_move(Move::Right);
 
     assert_eq!(
       game,
       Board::with_values([0, 0, 4, 2, 0, 0, 4, 8, 0, 0, 4, 4, 0, 0, 0, 4])
     );
+    assert!(changed);
 
     let mut game = Board::with_values([2, 2, 2, 2, 4, 2, 2, 0, 2, 2, 0, 4, 2, 0, 2, 2]);
 
-    game.apply_move(Move::Right);
+    let changed = game.apply_move(Move::Right);
 
     assert_eq!(
       game,
       Board::with_values([0, 0, 4, 4, 0, 0, 4, 4, 0, 0, 4, 4, 0, 0, 2, 4])
     );
+    assert!(changed);
+
+    let mut game = Board::with_values([0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 2, 4, 0, 2, 4, 8]);
+
+    let changed = game.apply_move(Move::Right);
+
+    assert_eq!(
+      game,
+      Board::with_values([0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 2, 4, 0, 2, 4, 8])
+    );
+    assert!(!changed);
   }
 
   #[test]
   fn move_down() {
     let mut game = Board::with_values([2, 2, 2, 0, 0, 0, 0, 2, 0, 2, 2, 2, 0, 0, 2, 2]);
 
-    game.apply_move(Move::Down);
+    let changed = game.apply_move(Move::Down);
 
     assert_eq!(
       game,
       Board::with_values([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 4, 4, 4,])
     );
+    assert!(changed);
 
     let mut game = Board::with_values([0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 0, 0, 2, 2, 0]);
 
-    game.apply_move(Move::Down);
+    let changed = game.apply_move(Move::Down);
 
     assert_eq!(
       game,
       Board::with_values([0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 4, 2, 4])
     );
+    assert!(changed);
 
     let mut game = Board::with_values([0, 2, 4, 2, 4, 2, 0, 0, 2, 0, 2, 0, 0, 8, 2, 2]);
 
-    game.apply_move(Move::Down);
+    let changed = game.apply_move(Move::Down);
 
     assert_eq!(
       game,
       Board::with_values([0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 0, 2, 8, 4, 4])
     );
+    assert!(changed);
 
     let mut game = Board::with_values([2, 0, 4, 2, 2, 2, 0, 2, 2, 2, 2, 0, 2, 4, 2, 2]);
 
-    game.apply_move(Move::Down);
+    let changed = game.apply_move(Move::Down);
 
     assert_eq!(
       game,
       Board::with_values([0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 2, 4, 4, 4, 4])
     );
+    assert!(changed);
+
+    let mut game = Board::with_values([0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 2, 4, 0, 2, 4, 8]);
+
+    let changed = game.apply_move(Move::Down);
+
+    assert_eq!(
+      game,
+      Board::with_values([0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 2, 4, 0, 2, 4, 8])
+    );
+    assert!(!changed);
   }
 
   #[test]
   fn move_up() {
     let mut game = Board::with_values([0, 0, 2, 2, 0, 2, 2, 2, 0, 0, 0, 2, 2, 2, 2, 0]);
 
-    game.apply_move(Move::Up);
+    let changed = game.apply_move(Move::Up);
 
     assert_eq!(
       game,
       Board::with_values([2, 4, 4, 4, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0,])
     );
+    assert!(changed);
 
     let mut game = Board::with_values([0, 2, 2, 0, 0, 2, 0, 0, 0, 2, 0, 2, 0, 2, 0, 2]);
 
-    game.apply_move(Move::Up);
+    let changed = game.apply_move(Move::Up);
 
     assert_eq!(
       game,
       Board::with_values([0, 4, 2, 4, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
     );
+    assert!(changed);
 
     let mut game = Board::with_values([0, 8, 2, 2, 2, 0, 2, 0, 4, 2, 0, 0, 0, 2, 4, 2]);
 
-    game.apply_move(Move::Up);
+    let changed = game.apply_move(Move::Up);
 
     assert_eq!(
       game,
       Board::with_values([2, 8, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0])
     );
+    assert!(changed);
 
     let mut game = Board::with_values([2, 4, 2, 2, 2, 2, 2, 0, 2, 2, 0, 2, 2, 0, 4, 2]);
 
-    game.apply_move(Move::Up);
+    let changed = game.apply_move(Move::Up);
 
     assert_eq!(
       game,
       Board::with_values([4, 4, 4, 4, 4, 4, 4, 2, 0, 0, 0, 0, 0, 0, 0, 0])
     );
+    assert!(changed);
+
+    let mut game = Board::with_values([8, 4, 2, 0, 4, 2, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0]);
+
+    let changed = game.apply_move(Move::Up);
+
+    assert_eq!(
+      game,
+      Board::with_values([8, 4, 2, 0, 4, 2, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0])
+    );
+    assert!(!changed);
   }
 
   #[test]
