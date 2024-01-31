@@ -137,26 +137,32 @@ impl Board {
   /// Applies a left movement to the board.
   fn move_left(&mut self) {
     for row in 0..ROWS {
-      let mut combined = [false; COLUMNS];
+      let mut i = 0;
+      let mut j = i + 1;
 
-      for column in 0..COLUMNS {
-        for window in (1..=column).rev() {
-          let current_value = self.get(row, window);
-          let previous_value = self.get(row, window - 1);
+      while i < COLUMNS && j < COLUMNS {
+        let current = self.get(row, i);
+        let next = self.get(row, j);
 
-          // If the previous value on the shifting direction is 0,
-          // we move the current value to the previous position.
-          if previous_value == 0 {
-            self.set(row, window - 1, current_value);
-            self.set(row, window, 0);
+        // If the current value is 0, we interchange values
+        if current == 0 {
+          self.set(row, i, next);
+          self.set(row, j, 0);
+          j += 1;
+        }
+        // If the next value is 0, we ignore it
+        else if next == 0 {
+          j += 1;
+        } else {
+          // If values can be merged, we merge next into current
+          if current == next {
+            self.set(row, i, current * 2);
+            self.set(row, j, 0);
           }
-          // If the previous and current value are equal and have not been combined yet,
-          // we combine those values in the previous position.
-          else if previous_value == current_value && !combined[window - 1] {
-            self.set(row, window - 1, previous_value + current_value);
-            combined[window - 1] = true;
-            self.set(row, window, 0);
-          }
+
+          // Start next round from the next current index
+          i += 1;
+          j = i + 1;
         }
       }
     }
@@ -165,26 +171,32 @@ impl Board {
   /// Applies a right movement to the board.
   fn move_right(&mut self) {
     for row in 0..ROWS {
-      let mut combined = [false; COLUMNS];
+      let mut i: i32 = COLUMNS as i32 - 1;
+      let mut j: i32 = i - 1;
 
-      for column in (0..COLUMNS).rev() {
-        for window in column..(COLUMNS - 1) {
-          let current_value = self.get(row, window);
-          let previous_value = self.get(row, window + 1);
+      while i > 0 && j >= 0 {
+        let current = self.get(row, i as usize);
+        let next = self.get(row, j as usize);
 
-          // If the previous value on the shifting direction is 0,
-          // we move the current value to the previous position.
-          if previous_value == 0 {
-            self.set(row, window + 1, current_value);
-            self.set(row, window, 0);
+        // If the current value is 0, we interchange values
+        if current == 0 {
+          self.set(row, i as usize, next);
+          self.set(row, j as usize, 0);
+          j -= 1;
+        }
+        // If the next value is 0, we ignore it
+        else if next == 0 {
+          j -= 1;
+        } else {
+          // If values can be merged, we merge next into current
+          if current == next {
+            self.set(row, i as usize, current * 2);
+            self.set(row, j as usize, 0);
           }
-          // If the previous and current value are equal and have not been combined yet,
-          // we combine those values in the previous position.
-          else if previous_value == current_value && !combined[window + 1] {
-            self.set(row, window + 1, previous_value + current_value);
-            combined[window + 1] = true;
-            self.set(row, window, 0);
-          }
+
+          // Start next round from the next current index
+          i -= 1;
+          j = i - 1;
         }
       }
     }
@@ -193,54 +205,66 @@ impl Board {
   /// Applies an up movement to the board.
   fn move_up(&mut self) {
     for column in 0..COLUMNS {
-      let mut combined = [false; ROWS];
+      let mut i = 0;
+      let mut j = i + 1;
 
-      for row in 0..ROWS {
-        for window in (1..=row).rev() {
-          let current_value = self.get(window, column);
-          let previous_value = self.get(window - 1, column);
+      while i < ROWS && j < ROWS {
+        let current = self.get(i, column);
+        let next = self.get(j, column);
 
-          // If the previous value on the shifting direction is 0,
-          // we move the current value to the previous position.
-          if previous_value == 0 {
-            self.set(window - 1, column, current_value);
-            self.set(window, column, 0);
+        // If the current value is 0, we interchange values
+        if current == 0 {
+          self.set(i, column, next);
+          self.set(j, column, 0);
+          j += 1;
+        }
+        // If the next value is 0, we ignore it
+        else if next == 0 {
+          j += 1;
+        } else {
+          // If values can be merged, we merge next into current
+          if current == next {
+            self.set(i, column, current * 2);
+            self.set(j, column, 0);
           }
-          // If the previous and current value are equal and have not been combined yet,
-          // we combine those values in the previous position.
-          else if previous_value == current_value && !combined[window - 1] {
-            self.set(window - 1, column, previous_value + current_value);
-            combined[window - 1] = true;
-            self.set(window, column, 0);
-          }
+
+          // Start next round from the next current index
+          i += 1;
+          j = i + 1;
         }
       }
     }
   }
 
-  /// Applies a down   movement to the board.
+  /// Applies a down movement to the board.
   fn move_down(&mut self) {
     for column in 0..COLUMNS {
-      let mut combined = [false; ROWS];
+      let mut i: i32 = ROWS as i32 - 1;
+      let mut j: i32 = i - 1;
 
-      for row in (0..ROWS).rev() {
-        for window in row..(ROWS - 1) {
-          let current_value = self.get(window, column);
-          let previous_value = self.get(window + 1, column);
+      while i > 0 && j >= 0 {
+        let current = self.get(i as usize, column);
+        let next = self.get(j as usize, column);
 
-          // If the previous value on the shifting direction is 0,
-          // we move the current value to the previous position.
-          if previous_value == 0 {
-            self.set(window + 1, column, current_value);
-            self.set(window, column, 0);
+        // If the current value is 0, we interchange values
+        if current == 0 {
+          self.set(i as usize, column, next);
+          self.set(j as usize, column, 0);
+          j -= 1;
+        }
+        // If the next value is 0, we ignore it
+        else if next == 0 {
+          j -= 1;
+        } else {
+          // If values can be merged, we merge next into current
+          if current == next {
+            self.set(i as usize, column, current * 2);
+            self.set(j as usize, column, 0);
           }
-          // If the previous and current value are equal and have not been combined yet,
-          // we combine those values in the previous position.
-          else if previous_value == current_value && !combined[window + 1] {
-            self.set(window + 1, column, previous_value + current_value);
-            combined[window + 1] = true;
-            self.set(window, column, 0);
-          }
+
+          // Start next round from the next current index
+          i -= 1;
+          j = i - 1;
         }
       }
     }
@@ -309,6 +333,15 @@ mod tests {
       game,
       Board::with_values([2, 4, 0, 0, 8, 4, 0, 0, 4, 4, 0, 0, 4, 0, 0, 0])
     );
+
+    let mut game = Board::with_values([2, 2, 2, 2, 4, 2, 2, 0, 2, 2, 0, 4, 2, 0, 2, 2]);
+
+    game.apply_move(Move::Left);
+
+    assert_eq!(
+      game,
+      Board::with_values([4, 4, 0, 0, 4, 4, 0, 0, 4, 4, 0, 0, 4, 2, 0, 0])
+    );
   }
 
   #[test]
@@ -339,35 +372,14 @@ mod tests {
       game,
       Board::with_values([0, 0, 4, 2, 0, 0, 4, 8, 0, 0, 4, 4, 0, 0, 0, 4])
     );
-  }
 
-  #[test]
-  fn move_up() {
-    let mut game = Board::with_values([0, 0, 2, 2, 0, 2, 2, 2, 0, 0, 0, 2, 2, 2, 2, 0]);
+    let mut game = Board::with_values([2, 2, 2, 2, 4, 2, 2, 0, 2, 2, 0, 4, 2, 0, 2, 2]);
 
-    game.apply_move(Move::Up);
+    game.apply_move(Move::Right);
 
     assert_eq!(
       game,
-      Board::with_values([2, 4, 4, 4, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0,])
-    );
-
-    let mut game = Board::with_values([0, 2, 2, 0, 0, 2, 0, 0, 0, 2, 0, 2, 0, 2, 0, 2]);
-
-    game.apply_move(Move::Up);
-
-    assert_eq!(
-      game,
-      Board::with_values([0, 4, 2, 4, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-    );
-
-    let mut game = Board::with_values([0, 8, 2, 2, 2, 0, 2, 0, 4, 2, 0, 0, 0, 2, 4, 2]);
-
-    game.apply_move(Move::Up);
-
-    assert_eq!(
-      game,
-      Board::with_values([2, 8, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+      Board::with_values([0, 0, 4, 4, 0, 0, 4, 4, 0, 0, 4, 4, 0, 0, 2, 4])
     );
   }
 
@@ -399,25 +411,73 @@ mod tests {
       game,
       Board::with_values([0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 0, 2, 8, 4, 4])
     );
+
+    let mut game = Board::with_values([2, 0, 4, 2, 2, 2, 0, 2, 2, 2, 2, 0, 2, 4, 2, 2]);
+
+    game.apply_move(Move::Down);
+
+    assert_eq!(
+      game,
+      Board::with_values([0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 2, 4, 4, 4, 4])
+    );
+  }
+
+  #[test]
+  fn move_up() {
+    let mut game = Board::with_values([0, 0, 2, 2, 0, 2, 2, 2, 0, 0, 0, 2, 2, 2, 2, 0]);
+
+    game.apply_move(Move::Up);
+
+    assert_eq!(
+      game,
+      Board::with_values([2, 4, 4, 4, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0,])
+    );
+
+    let mut game = Board::with_values([0, 2, 2, 0, 0, 2, 0, 0, 0, 2, 0, 2, 0, 2, 0, 2]);
+
+    game.apply_move(Move::Up);
+
+    assert_eq!(
+      game,
+      Board::with_values([0, 4, 2, 4, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    );
+
+    let mut game = Board::with_values([0, 8, 2, 2, 2, 0, 2, 0, 4, 2, 0, 0, 0, 2, 4, 2]);
+
+    game.apply_move(Move::Up);
+
+    assert_eq!(
+      game,
+      Board::with_values([2, 8, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    );
+
+    let mut game = Board::with_values([2, 4, 2, 2, 2, 2, 2, 0, 2, 2, 0, 2, 2, 0, 4, 2]);
+
+    game.apply_move(Move::Up);
+
+    assert_eq!(
+      game,
+      Board::with_values([4, 4, 4, 4, 4, 4, 4, 2, 0, 0, 0, 0, 0, 0, 0, 0])
+    );
   }
 
   #[test]
   fn is_over() {
     let game = Board::with_values([8, 4, 2, 4, 2, 8, 4, 2, 8, 4, 2, 4, 2, 8, 4, 4]);
 
-    assert_eq!(game.is_over(), false);
+    assert!(!game.is_over());
 
     let game = Board::with_values([4, 4, 2, 4, 2, 8, 4, 2, 8, 4, 2, 4, 2, 8, 4, 2]);
 
-    assert_eq!(game.is_over(), false);
+    assert!(!game.is_over());
 
     let game = Board::with_values([8, 4, 2, 4, 2, 8, 4, 2, 8, 4, 4, 4, 2, 8, 4, 2]);
 
-    assert_eq!(game.is_over(), false);
+    assert!(!game.is_over());
 
     let game = Board::with_values([8, 4, 2, 4, 2, 8, 4, 2, 8, 4, 2, 4, 2, 8, 4, 2]);
 
-    assert_eq!(game.is_over(), true);
+    assert!(game.is_over());
   }
 
   #[test]
