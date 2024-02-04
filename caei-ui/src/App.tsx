@@ -1,12 +1,10 @@
-import { createResource, type Component, createSignal, createEffect } from 'solid-js';
-import Header from './components/Header';
-import Board from './components/Board';
-import "./App.css";
-import { BoardAction, loadBoard, moveBoard, resetBoard } from './services/board';
-import Footer from './components/Footer';
+import { type Component, createSignal, onMount } from 'solid-js';
+import { BoardMove, BoardState, loadBoard, moveBoard, resetBoard } from './services/board';
+import Game from './components/Game';
 
+type BoardAction = 'init' | 'reset' | BoardMove;
 
-async function applyMove({ action }: { action: BoardAction }): Promise<number[]> {
+async function sendAction(action: BoardAction): Promise<BoardState> {
   switch (action) {
     case 'init':
       return loadBoard();
@@ -22,42 +20,41 @@ async function applyMove({ action }: { action: BoardAction }): Promise<number[]>
   }
 }
 
-const App: Component = () => {
-  const [move, setMove] = createSignal<{ action: BoardAction }>({ action: 'init' });
-  const [elements] = createResource(move, applyMove);
-  const onReset = () => setMove({ action: 'reset' });
+export default () => {
+  const [game, setGame] = createSignal<BoardState>({ elements: [], score: 0 });
 
-  document.addEventListener('keydown', (event) => {
+  const applyMove = async (action: BoardAction) => {
+    const game = await sendAction(action);
+    setGame(game);
+  }
+
+  document.addEventListener('keydown', async (event) => {
     switch (event.code) {
       case 'ArrowUp':
       case 'KeyW':
-        setMove({ action: 'up' });
+        await applyMove('up');
         break;
       case 'ArrowDown':
       case 'KeyS':
-        setMove({ action: 'down' });
+        await applyMove('down');
         break;
       case 'ArrowLeft':
       case 'KeyA':
-        setMove({ action: 'left' });
+        await applyMove('left');
         break;
       case 'ArrowRight':
       case 'KeyD':
-        setMove({ action: 'right' });
+        await applyMove('right');
         break;
       case 'KeyN':
-        onReset();
+        await applyMove('reset');
         break;
     }
   });
 
-  return (
-    <div class="game">
-      <Header onReset={onReset} />
-      <Board elements={elements()} />
-      <Footer />
-    </div>
-  );
-};
+  onMount(async () => {
+    await applyMove('init');
+  });
 
-export default App;
+  return <Game board={game()} onReset={() => applyMove('reset')}/>;
+};

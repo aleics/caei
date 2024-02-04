@@ -50,12 +50,14 @@ impl SharedState {
 
 #[derive(Serialize)]
 struct BoardDTO {
-  rows: Vec<Vec<i32>>,
+  score: u64,
+  rows: Vec<Vec<u64>>,
 }
 
 impl From<&Board> for BoardDTO {
   fn from(board: &Board) -> Self {
     BoardDTO {
+      score: board.score,
       rows: board.as_rows(),
     }
   }

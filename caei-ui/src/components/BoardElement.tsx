@@ -20,7 +20,12 @@ const COLORS = {
   65536: { background: "#91d0f8", color: "#fff" },
 };
 
-export default ({ value }: { value: number }) => {
+export interface BoardElementProps {
+  value: number;
+}
+
+export default (props: BoardElementProps) => {
+  const value = props.value;
   const { background, color } = COLORS[value] ?? { background: "#000", color: "#fff" };
   const text = value == 0 ? "" : value.toString();
 

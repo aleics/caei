@@ -1,9 +1,13 @@
-export type BoardAction = 'init' | 'reset' | BoardMove;
 export type BoardMove = 'left' | 'right' | 'up' | 'down';
+
+export interface BoardState {
+  elements: number[];
+  score: number;
+}
 
 const URL = 'http://localhost:8080/board'
 
-export async function moveBoard(action: BoardMove): Promise<number[]> {
+export async function moveBoard(action: BoardMove): Promise<BoardState> {
   const options: RequestInit = {
     method: 'POST',
     headers: {
@@ -12,26 +16,26 @@ export async function moveBoard(action: BoardMove): Promise<number[]> {
     body: JSON.stringify({ action })
   };
 
-  const { rows } = await fetch(`${URL}/move`, options)
+  const { rows, score } = await fetch(`${URL}/move`, options)
     .then((response) => response.json());
 
-  return rows.flat();
+  return { elements: rows.flat(), score };
 }
 
-export async function loadBoard(): Promise<number[]> {
-  const { rows } = await fetch(URL)
+export async function loadBoard(): Promise<BoardState> {
+  const { rows, score } = await fetch(URL)
     .then((response) => response.json());
 
-  return rows.flat();
+    return { elements: rows.flat(), score };
 }
 
-export async function resetBoard(): Promise<number[]> {
+export async function resetBoard(): Promise<BoardState> {
   const options: RequestInit = {
     method: 'POST'
   };
 
-  const { rows } = await fetch(`${URL}/reset`, options)
+  const { rows, score } = await fetch(`${URL}/reset`, options)
     .then((response) => response.json());
 
-  return rows.flat();
+    return { elements: rows.flat(), score };
 }
